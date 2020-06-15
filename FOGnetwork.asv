@@ -13,7 +13,7 @@ function GN = FOGnetwork(pd,stim,freq)
 %
 %
 %Author: Mariia Popova, UKE; based on Rosa So, Duke University 
-%Updated 15/06/2020
+%Updated 9/06/2020
 
 load('Istim.mat') %loads initial conditions %what is r?
 addpath('gating')
@@ -47,7 +47,7 @@ the=[0 30 20 20 30];
 %In order of Igesn,Isnge,Igege,Isngi,Igegi,Igith 
 gsyn = [1 0.3 1 0.3 1 .08]; Esyn = [-85 0 -85 0 -85 -85]; %alike in Rubin gsyn and in So Esyn
 %gsynppn = [0.15 0.1 0.15]; Esynppn = [0 -95 0]; %alike in Lourens
-gsynppn = [0.12 0.06 0.12 0.06]; Esynppn = [0 -85 0 0]; 
+gsynppn = [0.15 0.06 0.15 0.06]; Esynppn = [0 -85 0 0]; 
 tau=5; gpeak1=0.3; gpeak=0.43; %parameters for second-order alpha synapse
 
 %time step

@@ -30,9 +30,10 @@ save('Istim.mat','Istim','timespike','tmax','dt','v1','v2','v3','v4','v5','r','n
 %roughly 60sec to run.
 
 %calculate error index
-[Sc1, h]=FOGnetwork(0,0,0); %healthy
-[Sc2, pd] = FOGnetwork(1,0,0); %PD
-[Sc3, dbs]=FOGnetwork(1,1,130); %PD with DBS
+%dbstop in FOGnetwork at 294 if (ismember(i, timespikeint/dt))
+h=FOGnetwork(0,0,0); %healthy
+pd = FOGnetwork(1,0,0); %PD
+dbs=FOGnetwork(1,1,130); %PD with DBS
 
 %calculate wo error index
 %FOGnetwork(0,0,0); %healthy
