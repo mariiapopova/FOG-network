@@ -204,8 +204,7 @@ for i=2:length(t)
     Iahp3=gahp(3)*(V3-Ek(3)).*(CA3./(CA3+k1(3))); %as Ek is the same with Eahp
     Isnge=0.5*(gsyn(2)*(V3-Esyn(2)).*(S2+S21)); %second-order kinetics 1sn to 2ge
     Igege=0.5*((gsyn(3)+0.6*pd)*(V3-Esyn(3)).*(S31+S32)); %first-order kinetics 1ge to 2ge
-    Iappgpe=21-10*pd+r; %works wo playing with striatum
-    %Iappgpe=21;
+    Iappgpe=21-10*pd+r;
     %Iappgpe=3; %kumaravelu
     %str-gpe synapse
     Istrge=gsynstr(1)*(V3-Esynstr(3)).*S10; %1str to 1ge
