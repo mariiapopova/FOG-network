@@ -46,9 +46,11 @@ the=[0 30 20 20 30 20 20];
 
 %%Synapse parameters
 %In order of Igesn,Isnge,Igege,Isngi,Igegi,Igith 
+%gsyn = [1 0.3 1 0.3 1 .08]; Esyn = [-85 0 -85 0 -85 -85]; %alike in Rubin gsyn and in So Esyn
 gsyn = [1 0.3 1 0.3 1 .08]; Esyn = [-85 0 -85 0 -85 -85]; %alike in Rubin gsyn and in So Esyn
-%gsynppn = [0.15 0.1 0.15]; Esynppn = [0 -95 0]; %alike in Lourens
-gsynppn = [0.12 0.06 0.12 0.06]; Esynppn = [0 -85 0 0]; %in order snppn gippn ppnsn ppngi
+%gsynppn = [0.15 0.1 0.15 0.1]; Esynppn = [0 -95 0 0]; %alike in Lourens
+%gsynppn = [0.12 0.06 0.12 0.06]; Esynppn = [0 -85 0 0]; %in order snppn gippn ppnsn ppngi
+gsynppn = [0 0.2 0 0.2]; Esynppn = [0 -85 0 0]; %in order snppn gippn ppnsn ppngi
 tau=5; gpeak1=0.3; gpeak=0.43; %parameters for second-order alpha synapse
 gsynsnr=0.3; Esynsnr=0; %for snr synapses in order stn
 gsynstr=[0.5 0.5 0.5]; ggaba=0.1; gcorstr=0.07; Esynstr=[-80 0 -85 -85 -85]; tau_i=13;%parameters for striatum synapses in order gaba-rec
@@ -190,8 +192,7 @@ for i=2:length(t)
     Ica2=gca(2)*(C2.^2).*(V2-Eca(2));
     Iahp2=gahp(2)*(V2-Ek(2)).*(CA2./(CA2+k1(2))); %cause ek and eahp are the same
     Igesn=0.5*(gsyn(1)*(V2-Esyn(1)).*(S3+S31)); %first-order kinetics 1ge to 2sn
-    Iappstn=33-pd*10; %to switch between parkinsonian and healthy state
-    %Iappstn=33;
+    Iappstn=33;
     Ippnsn=gsynppn(3)*(V2-Esynppn(3)).*S7; %first-order kinetics ppn to stn
     
     %GPe cell currents
@@ -202,10 +203,8 @@ for i=2:length(t)
     Ica3=gca(3)*(s3.^2).*(V3-Eca(3)); %misspelled in So paper
     Iahp3=gahp(3)*(V3-Ek(3)).*(CA3./(CA3+k1(3))); %as Ek is the same with Eahp
     Isnge=0.5*(gsyn(2)*(V3-Esyn(2)).*(S2+S21)); %second-order kinetics 1sn to 2ge
-    %Igege=0.5*((gsyn(3)+0.2*pd)*(V3-Esyn(3)).*(S31+S32)); %first-order kinetics 1ge to 2ge
-    Igege=0.5*(gsyn(3)*(V3-Esyn(3)).*(S31+S32)); %first-order kinetics 1ge to 2ge
-    Iappgpe=21-13*pd+r; %why need r??   
-    %Iappgpe=2+0.2*pd; %rubin
+    Igege=0.5*((gsyn(3)+0.6*pd)*(V3-Esyn(3)).*(S31+S32)); %first-order kinetics 1ge to 2ge
+    Iappgpe=21-10*pd+r;
     %Iappgpe=3; %kumaravelu
     %str-gpe synapse
     Istrge=gsynstr(1)*(V3-Esynstr(3)).*S10; %1str to 1ge
@@ -219,8 +218,7 @@ for i=2:length(t)
     Iahp4=gahp(3)*(V4-Ek(3)).*(CA4./(CA4+k1(3))); %as Ek is the same with Eahp
     Isngi=0.5*(gsyn(4)*(V4-Esyn(4)).*(S2+S21)); %second-order kinetics 1sn to 2gi
     Igegi=0.5*(gsyn(5)*(V4-Esyn(5)).*(S31+S32)); %first-order kinetics 1ge to 2gi
-    Iappgpi=22-pd*6;
-    %Iappgpi=5; %rubin
+    Iappgpi=22;
     %Iappgpi=3; %kumaravelu
     Ippngi=gsynppn(4)*(V4-Esynppn(4)).*S8; %first-order kinetics ppn to gpi
     %str-gpi synapse
@@ -321,7 +319,7 @@ for i=2:length(t)
     S6=S6+dt*(A(4)*(1-S6).*Hinf(V4-the(4))-B(4)*S6);
     
     %PPN
-    vppn(:,i)=V5+dt*(1/Cm*(-Inal5-Ikl5-Ina5-Ik5-It5-Ihyp5-Inap5+Iappppn+Icort-Isnppn-Igippn));
+    vppn(:,i)=V5+dt*(1/Cm*(-Inal5-Ikl5-Ina5-Ik5-It5-Ihyp5-Inap5+Iappppn-Icort-Isnppn-Igippn));
     H5=H5+dt*((h5-H5)./th5);
     M5=M5+dt*((m5-M5)./tm5);
     Mk5=Mk5+dt*((mk5-Mk5)./tmk5);
@@ -342,7 +340,7 @@ for i=2:length(t)
     CA6=CA6+dt*(1*10^-4*(-Ica6-It6-kca(3)*CA6));
     
     %Striatum D2
-    vstr(:,i)=V7+(dt/Cm)*(-Ina7-Ik7-Il7-Im7-Igaba7+Icorstr);%+Iappstr-Igestr);
+    vstr(:,i)=V7+(dt/Cm)*(-Ina7-Ik7-Il7-Im7-Igaba7-Icorstr);%+Iappstr-Igestr);
     m7=m7+dt*(str_alpham(V7).*(1-m7)-str_betam(V7).*m7);
     h7=h7+dt*(str_alphah(V7).*(1-h7)-str_betah(V7).*h7);
     n7=n7+dt*(str_alphan(V7).*(1-n7)-str_betan(V7).*n7);
@@ -362,7 +360,7 @@ GN=calculateEI(t,vth,timespike,tmax); %for thalamus
 %%Plots membrane potential for one cell in each nucleus
 plotpotentials; 
 
-fr1=findfreq(vstr(1,:));
+fr1=findfreq(vppn(1,:));
 %fr2=findfreq(vge(1,:));
 %fr3=findfreq(vgi(1,:));
 %fr4=findfreq(vppn(1,:));
