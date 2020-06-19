@@ -16,13 +16,14 @@ v3=-62+randn(n,1)*5;
 v4=-62+randn(n,1)*5;
 v5=-62+randn(n,1)*5; %for PPN
 v6=-62+randn(n,1)*5; %for SNR
+v7=-63.8+randn(n,1)*5; %for striatum
 r=randn(n,1)*2; %what is r?
 
 %Sensorimotor cortex input to talamic cells
 [Istim, timespike]=createSMCinput(tmax,dt,14,0.2); 
 
 %BGnetwork loads Istim.mat which has all the initial conditions
-save('Istim.mat','Istim','timespike','tmax','dt','v1','v2','v3','v4','v5','r','n');
+save('Istim.mat','Istim','timespike','tmax','dt','v1','v2','v3','v4','v5','v6','v7','r','n');
 
 
 %% Running BGnetwork.m
