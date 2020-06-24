@@ -54,7 +54,7 @@ gsyn = [1 0.3 1 0.3 1 .08]; Esyn = [-85 0 -85 0 -85 -85]; %alike in Rubin gsyn a
 gsynppn = [0.26 0.2 0.26 0.2]; Esynppn = [0 -85 0 0]; %in order snppn gippn ppnsn ppngi
 tau=5; gpeak1=0.3; gpeak=0.43; %parameters for second-order alpha synapse
 gsynsnr=0.3; Esynsnr=0; %for snr synapses in order stn
-gsynstr=[0.5 0.5 0.5]; ggaba=0.1; gcorstr=0.07; Esynstr=[-85 0 -85 -85 -85]; tau_i=13;%parameters for striatum synapses in order gaba-rec
+gsynstr=[0.5 0.5 0.5 0.5]; ggaba=0.1; gcorstr=0.07; Esynstr=[-85 0 -85 -85 -85 -85]; tau_i=13;%parameters for striatum synapses in order gaba-rec
 
 %time step
 t=0:dt:tmax;
@@ -91,6 +91,7 @@ dll=randsample(n,n);
 S10=zeros(n,1); %for alpha-synapse str-ge current
 S11=zeros(n,1); %for alpha-synapse ge-str current
 S12=zeros(n,1); %for alpha-synapse str-gi current
+S13=zeros(n,1); %for alpha-synapse str-snr current
 
 %%with or without DBS
 Idbs=createdbs(freq,tmax,dt); %creating DBS train with frequency freq
@@ -204,7 +205,8 @@ for i=2:length(t)
     Ica3=gca(3)*(s3.^2).*(V3-Eca(3)); %misspelled in So paper
     Iahp3=gahp(3)*(V3-Ek(3)).*(CA3./(CA3+k1(3))); %as Ek is the same with Eahp
     Isnge=0.5*(gsyn(2)*(V3-Esyn(2)).*(S2+S21)); %second-order kinetics 1sn to 2ge
-    Igege=0.5*((gsyn(3)+0.45*pd)*(V3-Esyn(3)).*(S31+S32)); %first-order kinetics 1ge to 2ge optimized
+    Igege=0.5*((gsyn(3)+0.45*pd)*(V3-Esyn(3)).*(S31+S32)); %first-order kinetics 1ge to 2ge check %optimized
+    Iappgpe=17; %optimized
     %str-gpe synapse
     Istrge=gsynstr(1)*(V3-Esynstr(3)).*S10; %1str to 1ge
 
@@ -251,6 +253,8 @@ for i=2:length(t)
     Ica6=gca(3)*(s6.^2).*(V6-Eca(3)); 
     Iahp6=gahp(3)*(V6-Ek(3)).*(CA6./(CA6+k1(3))); %as Ek is the same with Eahp
     Isnsnr=gsynsnr*(V6-Esynsnr).*S9; %first-order kinetics 1sn to 1snr
+    %str-snr synapse
+    Istrsnr=gsynstr(4)*(V6-Esynstr(6)).*S13; %1str to 1ge
     
     %Striatum D2 cell currents
     Ina7=gna(5)*(m7.^3).*h7.*(V7-Ena(5));
@@ -356,12 +360,12 @@ GN=calculateEI(t,vth,timespike,tmax); %for thalamus
 %%Plots membrane potential for one cell in each nucleus
 plotpotentials; 
 
-% fr1=findfreq(vsn(1,:));
-% fr2=findfreq(vge(1,:));
-fr3=findfreq(vgi(1,:));
-fr4=findfreq(vppn(1,:));
-% disp(fr1);
-% disp(fr2);
-disp(fr3);
-disp(fr4);
+fr1=findfreq(vstr(1,:));
+fr2=findfreq(vsnr(1,:));
+% fr3=findfreq(vgi(1,:));
+% fr4=findfreq(vppn(1,:));
+disp(fr1);
+disp(fr2);
+% disp(fr3);
+% disp(fr4);
 return

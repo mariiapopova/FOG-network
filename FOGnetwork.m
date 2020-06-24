@@ -54,7 +54,7 @@ gsyn = [1 0.3 1 0.3 1 .08]; Esyn = [-85 0 -85 0 -85 -85]; %alike in Rubin gsyn a
 gsynppn = [0.26 0.2 0.26 0.2]; Esynppn = [0 -85 0 0]; %in order snppn gippn ppnsn ppngi
 tau=5; gpeak1=0.3; gpeak=0.43; %parameters for second-order alpha synapse
 gsynsnr=0.3; Esynsnr=0; %for snr synapses in order stn
-gsynstr=[0.5 0.5 0.5]; ggaba=0.1; gcorstr=0.07; Esynstr=[-85 0 -85 -85 -85]; tau_i=13;%parameters for striatum synapses in order gaba-rec
+gsynstr=[0.5 0.5 0.5 0.5]; ggaba=0.1; gcorstr=0.07; Esynstr=[-85 0 -85 -85 -85 -85]; tau_i=13;%parameters for striatum synapses in order gaba-rec
 
 %time step
 t=0:dt:tmax;
@@ -91,6 +91,7 @@ dll=randsample(n,n);
 S10=zeros(n,1); %for alpha-synapse str-ge current
 S11=zeros(n,1); %for alpha-synapse ge-str current
 S12=zeros(n,1); %for alpha-synapse str-gi current
+S13=zeros(n,1); %for alpha-synapse str-snr current
 
 %%with or without DBS
 Idbs=createdbs(freq,tmax,dt); %creating DBS train with frequency freq
@@ -221,7 +222,7 @@ for i=2:length(t)
     Iappgpi=17; %optimized
     Ippngi=gsynppn(4)*(V4-Esynppn(4)).*S8; %first-order kinetics ppn to gpi
     %str-gpi synapse
-    Istrgi=gsynstr(3)*(V3-Esynstr(5)).*S12; %1str to 1gi
+    Istrgi=gsynstr(3)*(V4-Esynstr(5)).*S12; %1str to 1gi
     
     %PPN cell currents
     Inal5=gnal5*(V5-Ena(4));
@@ -252,6 +253,8 @@ for i=2:length(t)
     Ica6=gca(3)*(s6.^2).*(V6-Eca(3)); 
     Iahp6=gahp(3)*(V6-Ek(3)).*(CA6./(CA6+k1(3))); %as Ek is the same with Eahp
     Isnsnr=gsynsnr*(V6-Esynsnr).*S9; %first-order kinetics 1sn to 1snr
+    %str-snr synapse
+    Istrsnr=gsynstr(4)*(V6-Esynstr(6)).*S13; %1str to 1ge
     
     %Striatum D2 cell currents
     Ina7=gna(5)*(m7.^3).*h7.*(V7-Ena(5));
@@ -330,7 +333,7 @@ for i=2:length(t)
     S8=S8+dt*(A(5)*(1-S8).*Hinf(V5-the(5))-B(5)*S8);
     
     %SNr
-    vsnr(:,i)=V6+dt*(1/Cm*(-Il6-Ik6-Ina6-It6-Ica6-Iahp6-Isnsnr)); %add currents!
+    vsnr(:,i)=V6+dt*(1/Cm*(-Il6-Ik6-Ina6-It6-Ica6-Iahp6-Isnsnr-Istrsnr)); %add currents!
     N6=N6+dt*(0.1*(n6-N6)./tn6); %misspelled in So paper
     H6=H6+dt*(0.05*(h6-H6)./th6); %misspelled in So paper
     R6=R6+dt*(1*(r6-R6)./tr6); %misspelled in So paper
@@ -347,6 +350,8 @@ for i=2:length(t)
     S10=S10+dt*(A(7)*(1-S10).*Hinf(V7-the(7))-B(7)*S10); 
     %for str-gpi synapse
     S12=S12+dt*(A(7)*(1-S12).*Hinf(V7-the(7))-B(7)*S12); 
+    %for str-snr synapse
+    S13=S13+dt*(A(7)*(1-S13).*Hinf(V7-the(7))-B(7)*S13); 
 
 end
 
