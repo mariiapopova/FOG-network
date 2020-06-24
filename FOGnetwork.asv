@@ -1,3 +1,4 @@
+%function GN = FOGnetwork(pd,stim,freq, aopt, bopt, copt, dopt, eopt, fopt)
 function GN = FOGnetwork(pd,stim,freq)
 
 %Usage: GN = FOGnetwork(pd,stim,freq)
@@ -53,7 +54,7 @@ gsyn = [1 0.3 1 0.3 1 .08]; Esyn = [-85 0 -85 0 -85 -85]; %alike in Rubin gsyn a
 gsynppn = [0.26 0.2 0.26 0.2]; Esynppn = [0 -85 0 0]; %in order snppn gippn ppnsn ppngi
 tau=5; gpeak1=0.3; gpeak=0.43; %parameters for second-order alpha synapse
 gsynsnr=0.3; Esynsnr=0; %for snr synapses in order stn
-gsynstr=[0.5 0.5 0.5]; ggaba=0.1; gcorstr=0.07; Esynstr=[-80 0 -85 -85 -85]; tau_i=13;%parameters for striatum synapses in order gaba-rec
+gsynstr=[0.5 0.5 0.5]; ggaba=0.1; gcorstr=0.07; Esynstr=[-85 0 -85 -85 -85]; tau_i=13;%parameters for striatum synapses in order gaba-rec
 
 %time step
 t=0:dt:tmax;
@@ -192,7 +193,7 @@ for i=2:length(t)
     Ica2=gca(2)*(C2.^2).*(V2-Eca(2));
     Iahp2=gahp(2)*(V2-Ek(2)).*(CA2./(CA2+k1(2))); %cause ek and eahp are the same
     Igesn=0.5*(gsyn(1)*(V2-Esyn(1)).*(S3+S31)); %first-order kinetics 1ge to 2sn
-    Iappstn=33;
+    Iappstn=25; %optimized
     Ippnsn=gsynppn(3)*(V2-Esynppn(3)).*S7; %first-order kinetics ppn to stn
     
     %GPe cell currents
@@ -203,9 +204,7 @@ for i=2:length(t)
     Ica3=gca(3)*(s3.^2).*(V3-Eca(3)); %misspelled in So paper
     Iahp3=gahp(3)*(V3-Ek(3)).*(CA3./(CA3+k1(3))); %as Ek is the same with Eahp
     Isnge=0.5*(gsyn(2)*(V3-Esyn(2)).*(S2+S21)); %second-order kinetics 1sn to 2ge
-    Igege=0.5*((gsyn(3)+0.6*pd)*(V3-Esyn(3)).*(S31+S32)); %first-order kinetics 1ge to 2ge
-    Iappgpe=21-10*pd+r;
-    %Iappgpe=3; %kumaravelu
+    Igege=0.5*((gsyn(3)+0.45*pd)*(V3-Esyn(3)).*(S31+S32)); %first-order kinetics 1ge to 2ge optimized
     %str-gpe synapse
     Istrge=gsynstr(1)*(V3-Esynstr(3)).*S10; %1str to 1ge
 
@@ -218,8 +217,7 @@ for i=2:length(t)
     Iahp4=gahp(3)*(V4-Ek(3)).*(CA4./(CA4+k1(3))); %as Ek is the same with Eahp
     Isngi=0.5*(gsyn(4)*(V4-Esyn(4)).*(S2+S21)); %second-order kinetics 1sn to 2gi
     Igegi=0.5*(gsyn(5)*(V4-Esyn(5)).*(S31+S32)); %first-order kinetics 1ge to 2gi
-    Iappgpi=22;
-    %Iappgpi=3; %kumaravelu
+    Iappgpi=17; %optimized
     Ippngi=gsynppn(4)*(V4-Esynppn(4)).*S8; %first-order kinetics ppn to gpi
     %str-gpi synapse
     Istrgi=gsynstr(3)*(V3-Esynstr(5)).*S12; %1str to 1gi
@@ -258,15 +256,12 @@ for i=2:length(t)
     Ina7=gna(5)*(m7.^3).*h7.*(V7-Ena(5));
     Ik7=gk(5)*(n7.^4).*(V7-Ek(5));
     Il7=gl(4)*(V7-El(4));
-    %Im7=(2.6-1.1*pd)*gm*p7.*(V7-Em);
-    Im7=(2.6)*gm*p7.*(V7-Em);
+    Im7=(2.6-1.73*pd)*gm*p7.*(V7-Em); %optimized
     Igaba7=(ggaba/4)*(V7-Esynstr(1)).*(S11cr+S12cr+S13cr+S14cr); %maybe change to 3.5 for direct and indirect %recieves input from 40% remaining
-    %Icorstr=(1-0.044*pd)*gcorstr*(V7-Esynstr(2)).*Sc(:,i-1);
-    Icorstr=gcorstr*(V7-Esynstr(2)).*Sc(:,i-1);
+    Icorstr=(9*gcorstr-0.132*pd)*(V7-Esynstr(2)).*Sc(:,i-1); %optimized
     %ge-str synapse
     Igestr=gsynstr(2)*(V7-Esynstr(4)).*S11; %1ge to 1str
-    %Iappstr=1.5;
-    Iappstr=3;
+    Iappstr=5; %optimized
     
     %Differential Equations for cells using forward Euler method
     %thalamic
@@ -315,6 +310,7 @@ for i=2:length(t)
     S4=S4+dt*Z4; 
     zdot=u-2/tau*Z4-1/(tau^2)*S4;
     Z4=Z4+dt*zdot;
+    
     %for gpi-ppn synapse
     S6=S6+dt*(A(4)*(1-S6).*Hinf(V4-the(4))-B(4)*S6);
     
@@ -360,12 +356,12 @@ GN=calculateEI(t,vth,timespike,tmax); %for thalamus
 %%Plots membrane potential for one cell in each nucleus
 plotpotentials; 
 
-fr1=findfreq(vsn(1,:));
-fr2=findfreq(vge(1,:));
+% fr1=findfreq(vsn(1,:));
+% fr2=findfreq(vge(1,:));
 fr3=findfreq(vgi(1,:));
 fr4=findfreq(vppn(1,:));
-disp(fr1);
-disp(fr2);
+% disp(fr1);
+% disp(fr2);
 disp(fr3);
 disp(fr4);
 return
