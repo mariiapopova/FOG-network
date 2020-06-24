@@ -1,2 +1,4 @@
 "# FOG-network" 
-Check how to implement SMC currents. Also, check how to include striatum and SNr (how to switch from healthy to PD state)?
+Can better optimize switching to PD.
+Check frequencies and implementation of striatum and SNr.
+Add striatal-SNr synapses.
