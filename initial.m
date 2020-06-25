@@ -19,18 +19,29 @@ close all
 % fopt=1; 
 
 %gpe
-aopt=linspace(0,0.7,7);
-bopt=[0.8667 1.733];
-copt=[0.132 0.396];
-dopt=[3 4 5];
-eopt=1;
-fopt=1; 
+% aopt=linspace(0,0.7,7);
+% bopt=[0.8667 1.733];
+% copt=[0.132 0.396];
+% dopt=[3 4 5];
+% eopt=1;
+% fopt=1; 
+
+%fixedgrid
+% aopt=linspace(23,27,5);
+% bopt=linspace(15,19,5);
+% copt=[2 3 4 5];
+% dopt=linspace(5,9,5);
+
+%pd params
+aopt=linspace(0.1,0.7,7);
+bopt=linspace(0.1,2.5,5);
+copt=linspace(1*0.044,12*0.044,7);
+
 
 num=0;
 for i=1:length(aopt)
     for j=1:length(bopt)
         for k=1:length(copt)
-            for l=1:length(dopt)
 %time variables
 tmax=1000; %maximum time (ms)
 dt=0.01; %timestep (ms)
@@ -63,10 +74,9 @@ save('Istim.mat','Istim','timespike','tmax','dt','v1','v2','v3','v4','v5','v6','
 aoptdum=aopt(i);
 boptdum=bopt(j);
 coptdum=copt(k);
-doptdum=dopt(l);
 
-h=FOGnetwork(0,0,0,aopt(i), bopt(j), copt(k), dopt(l), eopt, fopt); %healthy
-pd = FOGnetwork(1,0,0,aopt(i), bopt(j), copt(k), dopt(l), eopt, fopt); %PD
+h=FOGnetwork(0,0,0,aopt(i), bopt(j), copt(k)); %healthy
+pd = FOGnetwork(1,0,0,aopt(i), bopt(j), copt(k)); %PD
 %dbs=FOGnetwork(1,1,130); %PD with DBS
 % h=FOGnetwork(0,0,0); %healthy
 % pd = FOGnetwork(1,0,0); %PD
@@ -76,7 +86,7 @@ disp(num);
 
 filename=('optimization.mat'); 
 m = matfile(filename,'Writable',true);
-new_row_of_values = [aoptdum, boptdum, coptdum, doptdum, eopt, fopt, h, pd];
+new_row_of_values = [aoptdum, boptdum, coptdum, h, pd];
 if isprop(m, 'optimization')
     s = size(m, 'optimization');
     m.optimization(s(1)+1, :) = new_row_of_values;
@@ -91,7 +101,7 @@ end
             end
         end
     end
-end
+
 
 
 

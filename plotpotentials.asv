@@ -1,10 +1,9 @@
 %plotting utility for potential in each part of the network
 figure;
 subplot(2,4,1); 
-%ax=plotyy(t,vppn(1,:),t,Istim(1:tmax/dt+1)); %plot for 1st neuron both Istim and Vppn
-%set(ax(1),'XLim',[0 tmax],'YLim',[-100 80],'Visible','on')
-plot(t,vppn(1,:));axis([0 tmax -100 80 ])
-%set(ax(2),'XLim',[0 tmax],'YLim',[-2 30],'Visible','off')
+ax=plotyy(t,vppn(1,:),t,Istim(1:tmax/dt+1)); %plot for 1st neuron both Istim and Vppn
+set(ax(1),'XLim',[0 tmax],'YLim',[-100 80],'Visible','on')
+set(ax(2),'XLim',[0 tmax],'YLim',[-2 30],'Visible','off')
 title(['PPN, FR: ' num2str(int64(fr4)) 'Hz'])
 ylabel('Vm (mV)'); xlabel('Time (msec)');
 
@@ -40,5 +39,5 @@ plot(t,vsnr(1,:));axis([0 tmax -100 80 ])
 title(['SNr, FR: ' num2str(int64(fr7)) 'Hz'])
 ylabel('Vm (mV)'); xlabel('Time (msec)');
 
-suptitle({['Firing patterns in freezing of gait network']
+suptitle({['Firing patterns in basal ganglia network'
            ['Thalamic relay EI: ' num2str(titleval)]});

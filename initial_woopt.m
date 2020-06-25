@@ -30,7 +30,6 @@ save('Istim.mat','Istim','timespike','tmax','dt','v1','v2','v3','v4','v5','v6','
 %roughly 60sec to run.
 
 %calculate error index
-
 h=FOGnetwork(0,0,0); %healthy
 pd = FOGnetwork(1,0,0); %PD
 dbs=FOGnetwork(1,1,130); %PD with DBS
