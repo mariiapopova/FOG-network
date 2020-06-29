@@ -47,14 +47,11 @@ the=[0 30 20 20 30 20 20];
 
 %%Synapse parameters
 %In order of Igesn,Isnge,Igege,Isngi,Igegi,Igith 
-%gsyn = [1 0.3 1 0.3 1 .08]; Esyn = [-85 0 -85 0 -85 -85]; %alike in Rubin gsyn and in So Esyn
 gsyn = [1 0.3 1 0.3 1 .08]; Esyn = [-85 0 -85 0 -85 -85]; %alike in Rubin gsyn and in So Esyn
-%gsynppn = [0.15 0.1 0.15 0.1]; Esynppn = [0 -95 0 0]; %alike in Lourens
-%gsynppn = [0.12 0.06 0.12 0.06]; Esynppn = [0 -85 0 0]; %old + in order snppn gippn ppnsn ppngi
 gsynppn = [0.26 0.2 0.26 0.2 0.2]; Esynppn = [0 -85 0 0 -85]; %in order snppn gippn ppnsn ppngi snrppn
 tau=5; gpeak1=0.3; gpeak=0.43; %parameters for second-order alpha synapse
 gsynsnr=0.3; Esynsnr=0; %for snr synapses in order stn
-gsynstr=[0.5 0.5 0.5 0.5]; ggaba=0.1; gcorstr=0.07; Esynstr=[-85 0 -85 -85 -85 -85]; tau_i=13;%parameters for striatum synapses in order gaba-rec
+gsynstr=[0.5 0.5 0.5 0.5]; ggaba=0.1; gcorstr=0.07; Esynstr=[-85 0 -85 -85 -85 -85]; tau_i=13;%parameters for striatum synapses in order gaba-rec crtx strge gestr strgi strsnr
 
 %time step
 t=0:dt:tmax;
@@ -217,7 +214,7 @@ for i=2:length(t)
     Istrge=gsynstr(1)*(V3-Esynstr(3)).*S10; %1str to 1ge
 
     %GPi cell currents
-    Il4=gl(3)*(V4-El(3));
+    Il4=gl(3)*(V5-El(3));
     Ik4=gk(3)*(N4.^4).*(V4-Ek(3));
     Ina4=gna(3)*(m4.^3).*H4.*(V4-Ena(3)); %Eca as in Rubin and Terman
     It4=gt(3)*(a4.^3).*R4.*(V4-Eca(3)); %misspelled in So paper
@@ -326,8 +323,7 @@ for i=2:length(t)
     u=zeros(n,1); u(a)=gpeak1/(tau*exp(-1))/dt; 
     S4=S4+dt*Z4; 
     zdot=u-2/tau*Z4-1/(tau^2)*S4;
-    Z4=Z4+dt*zdot;
-    
+    Z4=Z4+dt*zdot;  
     %for gpi-ppn synapse
     S6=S6+dt*(A(4)*(1-S6).*Hinf(V4-the(4))-B(4)*S6);
     
@@ -346,7 +342,7 @@ for i=2:length(t)
     S8=S8+dt*(A(5)*(1-S8).*Hinf(V5-the(5))-B(5)*S8);
     
     %SNr
-    %vsnr(:,i)=V6+dt*(1/Cm*(-Il6-Ik6-Ina6-It6-Ica6-Iahp6-Isnsnr-Istrsnr+Idbs(i))); %add currents!
+    %vsnr(:,i)=V6+dt*(1/Cm*(-Il6-Ik6-Ina6-It6-Ica6-Iahp6-Isnsnr-Istrsnr+Idbs(i))); 
     vsnr(:,i)=V6+dt*(1/Cm*(-Il6-Ik6-Ina6-It6-Ica6-Iahp6-Isnsnr-Istrsnr)); 
     N6=N6+dt*(0.1*(n6-N6)./tn6); %misspelled in So paper
     H6=H6+dt*(0.05*(h6-H6)./th6); %misspelled in So paper

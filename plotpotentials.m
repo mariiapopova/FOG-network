@@ -22,12 +22,12 @@ ylabel('Vm (mV)'); xlabel('Time (msec)');
 
 subplot(2,4,4); %for 1st GPe neuron
 plot(t,vge(1,:));axis([0 tmax -100 80 ]) 
-title(['GPe, FR: ' num2str(int64(fr3)) 'Hz'])
+title(['GPe, FR: ' num2str(int64(fr2)) 'Hz'])
 ylabel('Vm (mV)'); xlabel('Time (msec)');
 
 subplot(2,4,5); %for 1st GPi neuron
 plot(t,vgi(1,:));axis([0 tmax -100 80 ]) 
-title(['GPi, FR: ' num2str(int64(fr2)) 'Hz'])
+title(['GPi, FR: ' num2str(int64(fr3)) 'Hz'])
 ylabel('Vm (mV)'); xlabel('Time (msec)');
 
 subplot(2,4,6); %for 1st striatum neuron
