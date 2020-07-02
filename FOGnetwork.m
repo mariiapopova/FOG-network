@@ -258,9 +258,12 @@ for i=2:length(t)
     It6=gt(3)*(a6.^3).*R6.*(V6-Eca(3)); %misspelled in So paper
     Ica6=gca(3)*(s6.^2).*(V6-Eca(3)); 
     Iahp6=gahp(3)*(V6-Ek(3)).*(CA6./(CA6+k1(3))); %as Ek is the same with Eahp
-    Isnsnr=gsynsnr*(V6-Esynsnr).*S9; %first-order kinetics 1sn to 1snr
+    %Isnsnr=gsynsnr*(V6-Esynsnr).*S9; %first-order kinetics 1sn to 1snr
+    Isnsnr=0.5*(gsynsnr*(V6-Esynsnr).*(S2+S21));
     %str-snr synapse
     Istrsnr=gsynstr(4)*(V6-Esynstr(6)).*S13; %1str to 1ge
+    %Iappsnr=3;
+    Iappsnr=0;
     
     %Striatum D2 cell currents
     Ina7=gna(5)*(m7.^3).*h7.*(V7-Ena(5));
@@ -342,8 +345,8 @@ for i=2:length(t)
     S8=S8+dt*(A(5)*(1-S8).*Hinf(V5-the(5))-B(5)*S8);
     
     %SNr
-    %vsnr(:,i)=V6+dt*(1/Cm*(-Il6-Ik6-Ina6-It6-Ica6-Iahp6-Isnsnr-Istrsnr+Idbs(i))); 
-    vsnr(:,i)=V6+dt*(1/Cm*(-Il6-Ik6-Ina6-It6-Ica6-Iahp6-Isnsnr-Istrsnr)); 
+    %vsnr(:,i)=V6+dt*(1/Cm*(-Il6-Ik6-Ina6-It6-Ica6-Iahp6-Isnsnr-Istrsnr+Idbs(i)+Iappsnr)); 
+    vsnr(:,i)=V6+dt*(1/Cm*(-Il6-Ik6-Ina6-It6-Ica6-Iahp6-Isnsnr-Istrsnr+Iappsnr)); 
     N6=N6+dt*(0.1*(n6-N6)./tn6); %misspelled in So paper
     H6=H6+dt*(0.05*(h6-H6)./th6); %misspelled in So paper
     R6=R6+dt*(1*(r6-R6)./tr6); %misspelled in So paper
