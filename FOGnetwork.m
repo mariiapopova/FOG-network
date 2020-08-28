@@ -1,4 +1,4 @@
-%function GN = FOGnetwork(pd,stim,freq, aopt, bopt, copt)
+%function GN = FOGnetwork(pd,stim,freq, aopt, bopt, copt, dopt)
 function GN = FOGnetwork(pd,stim,freq)
 
 %Usage: GN = FOGnetwork(pd,stim,freq)
@@ -9,7 +9,7 @@ function GN = FOGnetwork(pd,stim,freq)
 %pd - Variable to determine whether network is under the healthy or 
 %Parkinsonian condition. For healthy, pd = 0, for Parkinson's, pd = 1.
 %stim - Variable to determine whether deep brain stimulation is on.
-%If DBS is off, stim = 0. If DBS is on, stim = 1.
+%If DBS is off, stim = 1 If DBS is on, stim = 1.
 %freq - Determines the frequency of stimulation, in Hz.
 %
 %
@@ -21,13 +21,19 @@ addpath('gating')
 
 %Membrane parameters
 Cm=1; 
+
+%Rm=100; Ie=0.7; Iege=0.2; Iegi=0; Iesnr=0.2; %wo syn
+%Rm=100; Ie=0.26; Iege=1; Iegi=3; Iesnr=0.2; %wo syn
+%Rm=100; Ie=1.5; Iege=5.6; Iegi=10; Iesnr=0.2; %wo syn -pd*2 
+Rm=100; Ie=2; Iege=4.5; Iegi=8.5; Iesnr=1; %wo pd -pd*2 works!!! e2
+Elsn=-70; Vth=-54; 
+Vreset=-80; 
+
 %In order of Th,STN,GP,PPN,Str or Th,STN,GPe,GPi,PPN,SNr,Str
 gl=[0.05 2.25 0.1 0.1]; El=[-70 -60 -65 -67];
 gna=[3 37 120 30 100]; Ena=[50 55 55 45 50]; 
 gk=[5 45 30 3.2 80]; Ek=[-75 -80 -80 -95 -100];
 gt=[5 0.5 0.5]; Et=0;
-gca=[0 2 0.15]; Eca=[0 140 120];
-gahp=[0 20 10]; %eahp and ek are the same excluding th
 gnal5=0.0207; %na leakage ppn
 gkl5=0.05; %k leakage ppn
 gcort=0.15; Ecort=0; %cortex par for ppn
@@ -37,8 +43,11 @@ Pca=1*10^(-3); z=2; F=96490; R=8.314; T=309.5; Cao=2; Cai=2.4e-4; %alike destexh
 Bcort=1;%ms^-1
 gm=1; Em=-100;%for striatum muscarinic current
 
+gca=[0 2 0.15]; Eca=[0 140 120];
+gahp=[0 20 10]; %eahp and ek are the same excluding th
 k1=[0 15 10]; %dissociation const of ahp current 
 kca=[0 22.5 15]; %calcium pump rate constant
+
 %synapse params alike in rubin SNr same to Gpi, PPN same to STN, Str same
 %to Gpi
 A=[0 5 2 2 5 2 2]; 
@@ -47,7 +56,7 @@ the=[0 30 20 20 30 20 20];
 
 %%Synapse parameters
 %In order of Igesn,Isnge,Igege,Isngi,Igegi,Igith 
-gsyn = [1 0.3 1 0.3 1 .08]; Esyn = [-85 0 -85 0 -85 -85]; %alike in Rubin gsyn and in So Esyn
+Esyn = [-85 0 -85 0 -85 -85]; %alike in Rubin gsyn and in So Esyn
 gsynppn = [0.26 0.2 0.26 0.2 0.2]; Esynppn = [0 -85 0 0 -85]; %in order snppn gippn ppnsn ppngi snrppn
 tau=5; gpeak1=0.3; gpeak=0.43; %parameters for second-order alpha synapse
 gsynsnr=0.3; Esynsnr=0; %for snr synapses in order stn
@@ -65,31 +74,58 @@ vgi=zeros(n,length(t)); %GPi membrane voltage
 vppn=zeros(n,length(t)); %PPN membrane voltage
 vsnr=zeros(n,length(t));%SNr membrane voltage
 vstr=zeros(n,length(t));%striatum membrane voltage
-Z4=zeros(n,1); %for 2 order alpha-synapse gpi-th current
-S4=zeros(n,1); %for alpha-synapse gpi-th current
-S3=zeros(n,1); %for alpha-synapse gesn current
-S31=zeros(n,1);%for dummy gesn current
-S2=zeros(n,1); %for alpha-synapse snge current
-Z2=zeros(n,1); %for 2 order alpha-synapse sn current
-S21=zeros(n,1); %for dummy snge current
-S32=zeros(n,1); %for dummy gege current
+
 S5=zeros(n,1); %for alpha-synapse stn-ppn current
 S6=zeros(n,1); %for alpha-synapse gpi-ppn current
 S7=zeros(n,1); %for alpha-synapse ppn-stn current
 S8=zeros(n,1); %for alpha-synapse ppn-gpi current
 Sc=zeros(n,length(t)); %for cortex-ppn synapse
-S9=zeros(n,1); %for alpha-synapse stn-snr current
+
 S1c=zeros(n,1); %for striatum gaba-rec
 %for synapses striatum-gaba-rec
 all=randsample(n,n);
 bll=randsample(n,n);
 cll=randsample(n,n);
 dll=randsample(n,n);
-S10=zeros(n,1); %for alpha-synapse str-ge current
-S11=zeros(n,1); %for alpha-synapse ge-str current
-S12=zeros(n,1); %for alpha-synapse str-gi current
-S13=zeros(n,1); %for alpha-synapse str-snr current
-S14=zeros(n,1); %for alpha-synapse snr-ppn current
+
+S2a=zeros(n,1); 
+S21a=zeros(n,1);
+S2an=zeros(n,1);
+S21an=zeros(n,1);
+S2b=zeros(n,1); 
+S21b=zeros(n,1);
+S2c=zeros(n,1); 
+S21c=zeros(n,1);
+S3a=zeros(n,1); 
+S31a=zeros(n,1); 
+S3b=zeros(n,1);
+S31b=zeros(n,1);
+S32b=zeros(n,1);
+S3c=zeros(n,1);
+S31c=zeros(n,1); 
+S32c=zeros(n,1);
+S4=zeros(n,1); %for gpi-th current
+S5=zeros(n,1);
+S51=zeros(n,1);
+S52=zeros(n,1);
+S53=zeros(n,1);
+S54=zeros(n,1);
+S55=zeros(n,1);
+S56=zeros(n,1);
+S57=zeros(n,1);
+S58=zeros(n,1);
+S59=zeros(n,1);
+S3d=zeros(n,1);
+S9=zeros(n,1);
+S91=zeros(n,1);
+S92=zeros(n,1);
+S93=zeros(n,1);
+S94=zeros(n,1);
+S95=zeros(n,1);
+S96=zeros(n,1);
+S97=zeros(n,1);
+S98=zeros(n,1);
+S99=zeros(n,1);
 
 %%with or without DBS
 Idbs=createdbs(freq,tmax,dt); %creating DBS train with frequency freq
@@ -105,22 +141,19 @@ vsnr(:,1)=v6; %for SNr
 vstr(:,1)=v7; %for striatum D2
 
 %helper variables for gating and synapse params - starting parameters
-R2=stn_rinf(vsn(:,1)); %r for stn
-H1=th_hinf(vth(:,1)); %h for th
-R1=th_rinf(vth(:,1)); %r for th
-N2=stn_ninf(vsn(:,1));%n for stn
-H2=stn_hinf(vsn(:,1));%h for stn
-C2=stn_cinf(vsn(:,1));%c for stn
-CA2=0.1; %intracellular concentration of Ca2+ in muM for stn
-CA3=CA2; %for gpe
-CA4=CA2; %for gpi
-CA6=CA2; %for snr
 N3=gpe_ninf(vge(:,1));%n for gpe
 H3=gpe_hinf(vge(:,1));%h for gpe
 R3=gpe_rinf(vge(:,1));%r for gpe
 N4=gpe_ninf(vgi(:,1));%n for gpi
 H4=gpe_hinf(vgi(:,1));%h for gpi
 R4=gpe_rinf(vgi(:,1));%r for gpi
+CA2=0.1; %intracellular concentration of Ca2+ in muM for stn
+CA3=CA2; %for gpe
+CA4=CA2; %for gpi
+CA6=CA2; %for snr
+
+H1=th_hinf(vth(:,1)); %h for th
+R1=th_rinf(vth(:,1)); %r for th
 M5=ppn_minf(vppn(:,1));%m for ppn na
 H5=ppn_hinf(vppn(:,1));%h for ppn na
 Mk5=ppn_mkinf(vppn(:,1));%m for ppn k
@@ -128,9 +161,6 @@ Mh5=ppn_mhinf(vppn(:,1));%m for ppn hyp
 Hnap5=ppn_hnapinf(vppn(:,1));%h for ppn nap
 Mt5=ppn_mtinf(vppn(:,1));%m for ppn low-tresh
 Ht5=ppn_htinf(vppn(:,1));%h for ppn low-tresh
-N6=gpe_ninf(vsnr(:,1));%n for snr
-H6=gpe_hinf(vsnr(:,1));%h for snr
-R6=gpe_rinf(vsnr(:,1));%r for snr
 
 %striatum gating
 m7=str_alpham(vstr(:,1))./(str_alpham(vstr(:,1))+str_betam(vstr(:,1)));
@@ -140,40 +170,169 @@ p7=str_alphap(vstr(:,1))./(str_alphap(vstr(:,1))+str_betap(vstr(:,1)));
 
 timespikeint = int64(timespike); %index when 1 for ppn
 
-%%Time loop
-for i=2:length(t)
+%STN-GPe Synapse
+const = gpeak/(tau*exp(-1));  
+const1 = gpeak1/(tau*exp(-1)); 
+const2 = gpeak1/(tau*exp(-1)); 
+t_a = 1000; % Max duration of syn conductance
+t_vec = 0:dt:t_a;
+
+%STN-GPe Synapse
+t_d_stn_gpe=2;
+taudstngpea=2.5;
+taurstngpea=0.4;
+taudstngpen=67;
+taurstngpen=2;
+tpeakstngpea = t_d_stn_gpe + (((taudstngpea*taurstngpea)/(taudstngpea-taurstngpea))*log(taudstngpea/taurstngpea)); 
+fstngpea = 1/(exp(-(tpeakstngpea-t_d_stn_gpe)/taudstngpea)-exp(-(tpeakstngpea-t_d_stn_gpe)/taurstngpea));
+syn_func_stn_gpea = gpeak*fstngpea.*(exp(-(t_vec-t_d_stn_gpe)/taudstngpea)-exp(-(t_vec-t_d_stn_gpe)/taurstngpea)).*((t_vec>=t_d_stn_gpe)&(t_vec<=t_a));
+tpeakstngpen = t_d_stn_gpe + (((taudstngpen*taurstngpen)/(taudstngpen-taurstngpen))*log(taudstngpen/taurstngpen)); 
+fstngpen = 1/(exp(-(tpeakstngpen-t_d_stn_gpe)/taudstngpen)-exp(-(tpeakstngpen-t_d_stn_gpe)/taurstngpen));
+syn_func_stn_gpen = gpeak*fstngpen.*(exp(-(t_vec-t_d_stn_gpe)/taudstngpen)-exp(-(t_vec-t_d_stn_gpe)/taurstngpen)).*((t_vec>=t_d_stn_gpe)&(t_vec<=t_a));
+
+%STN-GPi Synapse %SNr in a similar fashion
+t_d_stn_gpi=1.5;
+syn_func_stn_gpi = const*(t_vec-t_d_stn_gpi).*(exp(-(t_vec-t_d_stn_gpi)/tau)).*((t_vec>=t_d_stn_gpi)&(t_vec<=t_a));
+
+%GPe-STN Synapse
+t_d_gpe_stn=4;
+taudg=7.7;
+taurg=0.4;
+tpeakg = t_d_gpe_stn + (((taudg*taurg)/(taudg-taurg))*log(taudg/taurg)); 
+fg = 1/(exp(-(tpeakg-t_d_gpe_stn)/taudg)-exp(-(tpeakg-t_d_gpe_stn)/taurg));
+syn_func_gpe_stn = gpeak1*fg.*(exp(-(t_vec-t_d_gpe_stn)/taudg)-exp(-(t_vec-t_d_gpe_stn)/taurg)).*((t_vec>=t_d_gpe_stn)&(t_vec<=t_a));
+
+%GPe-GPi Synapse
+t_d_gpe_gpi=3;
+syn_func_gpe_gpi = const1*(t_vec-t_d_gpe_gpi).*(exp(-(t_vec-t_d_gpe_gpi)/tau)).*((t_vec>=t_d_gpe_gpi)&(t_vec<=t_a));
+
+%GPe-GPe Synapse
+t_d_gpe_gpe=1;
+syn_func_gpe_gpe = const1*(t_vec-t_d_gpe_gpe).*(exp(-(t_vec-t_d_gpe_gpe)/tau)).*((t_vec>=t_d_gpe_gpe)&(t_vec<=t_a));
+
+%GPi-TH Synapse
+t_d_gpi_th=5;
+syn_func_gpi_th = const1*(t_vec-t_d_gpi_th).*(exp(-(t_vec-t_d_gpi_th)/tau)).*((t_vec>=t_d_gpi_th)&(t_vec<=t_a));
+
+%Str-GPe Synapse
+t_d_d2_gpe=5;
+syn_func_str_gpe = const2*(t_vec- t_d_d2_gpe).*(exp(-(t_vec-t_d_d2_gpe)/tau)).*((t_vec>=t_d_d2_gpe)&(t_vec<=t_a));
+
+%Str-GPi Synapse
+t_d_d1_gpi=4;
+syn_func_str_gpi = const2*(t_vec- t_d_d1_gpi).*(exp(-(t_vec-t_d_d1_gpi)/tau)).*((t_vec>=t_d_d1_gpi)&(t_vec<=t_a));
+
+t_list_str_indr(1:n) = struct('times',[]);
+t_list_stn(1:n) = struct('times',[]);
+t_list_gpe(1:n) = struct('times',[]);
+t_list_gpi(1:n) = struct('times',[]);
+
+ggege=0.5;
+gcorsna=0.3;
+gcorsnn=0.003;
+gsngen=0.001;
+gsngea=0.15;
+gsngi=0.15;
+ggith=0.112;
+ggesn=0.5;
+gstrgpe=0.5;
+gstrgpi=0.5;
+ggigi=0.5;
+
+%Time loop
+for i=1:length(t)-1
     
     %condition for cortex current for ppn and striatum
-    if ismember(i, timespikeint/dt)
-        Sc(:,i-1) = 1;
+    if ismember(i+1, timespikeint/dt)
+        Sc(:,i) = 1;
     end
     
-    V1=vth(:,i-1);    V2=vsn(:,i-1);     V3=vge(:,i-1);    V4=vgi(:,i-1); V5=vppn(:,i-1); V6=vsnr(:,i-1); %previous values
-    V7=vstr(:,i-1);
+    V1=vth(:,i);    V2=vsn(:,i);     V3=vge(:,i);    V4=vgi(:,i); V5=vppn(:,i); V6=vsnr(:,i); 
+    V7=vstr(:,i);
+
     % Synapse parameters 
-    S21(2:n)=S2(1:n-1);S21(1)=S2(n); %dummy synapse for snge current as there is 1 stn to 2 ge
-    S31(1:n-1)=S3(2:n);S31(n)=S3(1); %dummy synapse for gesn current as there is 1 ge to 2 stn
-    S32(3:n)=S3(1:n-2);S32(1:2)=S3(n-1:n); %dummy synapse for gege current as there is 1 ge to 2 ge
-    S11cr=S1c(all); S12cr=S1c(bll); S13cr=S1c(cll); S14cr=S1c(dll); %dummy striatum crtx current
+    S21a(2:n)=S2a(1:n-1);
+    S21a(1)=S2a(n);
+    
+    S21an(2:n)=S2an(1:n-1);
+    S21an(1)=S2an(n);
+    
+    S21b(2:n)=S2b(1:n-1);
+    S21b(1)=S2b(n);
+    
+    S21c(2:n)=S2c(1:n-1);
+    S21c(1)=S2c(n);
+    
+    S31a(1:n-1)=S3a(2:n);
+    S31a(n)=S3a(1);
+    
+    S31b(1:n-1)=S3b(2:n);
+    S31b(n)=S3b(1);
+    
+    S31c(1:n-1)=S3c(2:n);
+    S31c(n)=S3c(1);
+    
+    S32c(3:n)=S3c(1:n-2);
+    S32c(1:2)=S3c(n-1:n);
+    
+    S32b(3:n)=S3b(1:n-2);
+    S32b(1:2)=S3b(n-1:n);
+    
+    S51(1:n-1)=S5(2:n);
+    S51(n)=S5(1);
+    S52(1:n-2)=S5(3:n);
+    S52(n-1:n)=S5(1:2);
+    S53(1:n-3)=S5(4:n);
+    S53(n-2:n)=S5(1:3);
+    S54(1:n-4)=S5(5:n);
+    S54(n-3:n)=S5(1:4);
+    S55(1:n-5)=S5(6:n);
+    S55(n-4:n)=S5(1:5);
+    S56(1:n-6)=S5(7:n);
+    S56(n-5:n)=S5(1:6);
+    S57(1:n-7)=S5(8:n);
+    S57(n-6:n)=S5(1:7);
+    S58(1:n-8)=S5(9:n);
+    S58(n-7:n)=S5(1:8);
+    S59(1:n-9)=S5(10:n);
+    S59(n-8:n)=S5(1:9);
+    
+    S91(1:n-1)=S9(2:n);
+    S91(n)=S9(1);
+    S92(1:n-2)=S9(3:n);
+    S92(n-1:n)=S9(1:2);
+    S93(1:n-3)=S9(4:n);
+    S93(n-2:n)=S9(1:3);
+    S94(1:n-4)=S9(5:n);
+    S94(n-3:n)=S9(1:4);
+    S95(1:n-5)=S9(6:n);
+    S95(n-4:n)=S9(1:5);
+    S96(1:n-6)=S9(7:n);
+    S96(n-5:n)=S9(1:6);
+    S97(1:n-7)=S9(8:n);
+    S97(n-6:n)=S9(1:7);
+    S98(1:n-8)=S9(9:n);
+    S98(n-7:n)=S9(1:8);
+    S99(1:n-9)=S9(10:n);
+    S99(n-8:n)=S9(1:9);
+    
+    S11cr=S1c(all); S12cr=S1c(bll); S13cr=S1c(cll); S14cr=S1c(dll); %dummy striatum gaba current
     
     %membrane parameters - gating variables
-    m1=th_minf(V1);m2=stn_minf(V2);m3=gpe_minf(V3);m4=gpe_minf(V4); m6=gpe_minf(V6); %gpe and gpi are modeled similarily
-    n2=stn_ninf(V2);n3=gpe_ninf(V3);n4=gpe_ninf(V4); n6=gpe_ninf(V6);
-    h1=th_hinf(V1);h2=stn_hinf(V2);h3=gpe_hinf(V3);h4=gpe_hinf(V4); h6=gpe_hinf(V6);
+    m1=th_minf(V1);m3=gpe_minf(V3);m4=gpe_minf(V4); m6=gpe_minf(V6); %gpe and gpi are modeled similarily
+    n3=gpe_ninf(V3);n4=gpe_ninf(V4); n6=gpe_ninf(V6);
+    h1=th_hinf(V1);h3=gpe_hinf(V3);h4=gpe_hinf(V4); h6=gpe_hinf(V6);
     p1=th_pinf(V1);
-    a2=stn_ainf(V2); a3=gpe_ainf(V3);a4=gpe_ainf(V4); a6=gpe_ainf(V6); %for low-treshold ca
-    b2=stn_binf(R2);
+    a3=gpe_ainf(V3);a4=gpe_ainf(V4); a6=gpe_ainf(V6); %for low-treshold ca
     s3=gpe_sinf(V3);s4=gpe_sinf(V4); s6=gpe_sinf(V6);
-    r1=th_rinf(V1);r2=stn_rinf(V2);r3=gpe_rinf(V3);r4=gpe_rinf(V4); r6=gpe_rinf(V6);
-    c2=stn_cinf(V2);
+    r1=th_rinf(V1);r3=gpe_rinf(V3);r4=gpe_rinf(V4); r6=gpe_rinf(V6);
     m5=ppn_minf(V5); h5=ppn_hinf(V5); mk5=ppn_mkinf(V5); mh5=ppn_mhinf(V5);
     mnap5=ppn_mnapinf(V5); hnap5=ppn_hnapinf(V5); mt5=ppn_mtinf(V5); ht5=ppn_htinf(V5);
 
     %membrane parameters - time constants
-    tn2=stn_taun(V2);tn3=gpe_taun(V3);tn4=gpe_taun(V4);tn6=gpe_taun(V6);
-    th1=th_tauh(V1);th2=stn_tauh(V2);th3=gpe_tauh(V3);th4=gpe_tauh(V4); th6=gpe_tauh(V6);
-    tr1=th_taur(V1);tr2=stn_taur(V2);tr3=30;tr4=30;tr6=30;
-    tc2=stn_tauc(V2);
+    tn3=gpe_taun(V3);tn4=gpe_taun(V4);tn6=gpe_taun(V6);
+    th1=th_tauh(V1);th3=gpe_tauh(V3);th4=gpe_tauh(V4); th6=gpe_tauh(V6);
+    tr1=th_taur(V1);tr3=30;tr4=30;tr6=30;
     tm5=ppn_taum(V5); th5=ppn_tauh(V5); tmk5=ppn_taumk(V5); tmh5=ppn_taumh(V5);
     thnap5=ppn_tauhnap(V5); tmt5=ppn_taumt(V5); tht5=ppn_tauht(V5);
     
@@ -182,19 +341,12 @@ for i=2:length(t)
     Ina1=gna(1)*(m1.^3).*H1.*(V1-Ena(1));
     Ik1=gk(1)*((0.75*(1-H1)).^4).*(V1-Ek(1)); %misspelled in So paper
     It1=gt(1)*(p1.^2).*R1.*(V1-Et);
-    Igith=1.4*gsyn(6)*(V1-Esyn(6)).*S4; %for alpha-synapse second order kinetics
+    Igith=ggith*(V1-Esyn(6)).*(S4); 
     
     %STN cell currents
-    Il2=gl(2)*(V2-El(2));
-    Ik2=gk(2)*(N2.^4).*(V2-Ek(2));
-    Ina2=gna(2)*(m2.^3).*H2.*(V2-Ena(2));
-    It2=gt(2)*(a2.^3).*(b2.^2).*(V2-Eca(2)); %misspelled in So paper
-    Ica2=gca(2)*(C2.^2).*(V2-Eca(2));
-    Iahp2=gahp(2)*(V2-Ek(2)).*(CA2./(CA2+k1(2))); %cause ek and eahp are the same
-    Igesn=0.5*(gsyn(1)*(V2-Esyn(1)).*(S3+S31)); %first-order kinetics 1ge to 2sn
-    %Iappstn=25; %optimized
-    Iappstn=23;
-    %Iappstn=aopt;
+    Igesn=(ggesn*(V2-Esyn(1)).*(S3a+S31a)); 
+    Icorsnampa=gcorsna.*(V2-Esynstr(2)).*(2*Sc(:,i));
+    Icorsnnmda=gcorsnn.*(V2-Esynstr(2)).*(2*Sc(:,i));
     Ippnsn=gsynppn(3)*(V2-Esynppn(3)).*S7; %first-order kinetics ppn to stn
     
     %GPe cell currents
@@ -204,14 +356,14 @@ for i=2:length(t)
     It3=gt(3)*(a3.^3).*R3.*(V3-Eca(3)); %Eca as in Rubin and Terman
     Ica3=gca(3)*(s3.^2).*(V3-Eca(3)); %misspelled in So paper
     Iahp3=gahp(3)*(V3-Ek(3)).*(CA3./(CA3+k1(3))); %as Ek is the same with Eahp
-    Isnge=0.5*(gsyn(2)*(V3-Esyn(2)).*(S2+S21)); %second-order kinetics 1sn to 2ge
-    Igege=0.5*((gsyn(3)+0.4*pd)*(V3-Esyn(3)).*(S31+S32)); %first-order kinetics 1ge to 2ge check %optimized
-    %Igege=0.5*((gsyn(3)+aopt*pd)*(V3-Esyn(3)).*(S31+S32)); %first-order kinetics 1ge to 2ge check %optimized
-    %Iappgpe=17; %optimized
-    Iappgpe=19;
-    %Iappgpe=bopt;
+    Isnge=(gsngea)*((V3-Esyn(2)).*(S2a+S21a)); 
+    Isngenmda=(gsngen)*((V3-Esyn(2)).*(S2an+S21an)); 
+    %Igege=0.25*((ggege+3*pd*ggege).*(V3-Esyn(3)).*(S31c+S32c));
+    %Igege=0.25*((ggege+5*pd*ggege).*(V3-Esyn(3)).*(S31c+S32c)); smh
+    %Igege=0.25*((ggege+dopt*pd*ggege).*(V3-Esyn(3)).*(S31c+S32c));
+    Igege=0.25*((ggege+9*pd*ggege).*(V3-Esyn(3)).*(S31c+S32c));
     %str-gpe synapse
-    Istrge=gsynstr(1)*(V3-Esynstr(3)).*S10; %1str to 1ge
+    Istrge=gstrgpe*(V3-Esynstr(3)).*(S5+S51+S52+S53+S54+S55+S56+S57+S58+S59);
 
     %GPi cell currents
     Il4=gl(3)*(V5-El(3));
@@ -220,14 +372,11 @@ for i=2:length(t)
     It4=gt(3)*(a4.^3).*R4.*(V4-Eca(3)); %misspelled in So paper
     Ica4=gca(3)*(s4.^2).*(V4-Eca(3)); 
     Iahp4=gahp(3)*(V4-Ek(3)).*(CA4./(CA4+k1(3))); %as Ek is the same with Eahp
-    Isngi=0.5*(gsyn(4)*(V4-Esyn(4)).*(S2+S21)); %second-order kinetics 1sn to 2gi
-    Igegi=0.5*(gsyn(5)*(V4-Esyn(5)).*(S31+S32)); %first-order kinetics 1ge to 2gi
-    %Iappgpi=17; %optimized
-    Iappgpi=19;
-    %Iappgpi=bopt;
+    Isngi=gsngi*(V4-Esyn(4)).*(S2b+S21b); 
+    Igegi=ggigi*(V4-Esyn(5)).*(S31b+S32b); 
     Ippngi=gsynppn(4)*(V4-Esynppn(4)).*S8; %first-order kinetics ppn to gpi
     %str-gpi synapse
-    Istrgi=gsynstr(3)*(V4-Esynstr(5)).*S12; %1str to 1gi
+    Istrgi=gstrgpi*(V4-Esynstr(5)).*(S9+S91+S92+S93+S94+S95+S96+S97+S98+S99);
     
     %PPN cell currents
     Inal5=gnal5*(V5-Ena(4));
@@ -248,90 +397,143 @@ for i=2:length(t)
     Iappppn=0; %chosen from fig.5 in Lourens
     Isnppn=gsynppn(1)*(V5-Esynppn(1)).*S5; %first-order kinetics stn to ppn
     Igippn=gsynppn(2)*(V5-Esynppn(2)).*S6; %first-order kinetics gpi to ppn
-    Icort=gcort*Sc(:,i-1).*(V5-Ecort);
-    Isnrppn=gsynppn(5)*(V5-Esynppn(5)).*S14; %first-order kinetics snr to ppn
+    Icort=gcort*Sc(:,i).*(V5-Ecort);
+    %Isnrppn=gsynppn(5)*(V5-Esynppn(5)).*S14; %first-order kinetics snr to ppn
     
     %SNr cell currents - modelled as GPi
-    Il6=gl(3)*(V6-El(3));
-    Ik6=gk(3)*(N6.^4).*(V6-Ek(3));
-    Ina6=gna(3)*(m6.^3).*H6.*(V6-Ena(3)); %Eca as in Rubin and Terman
-    It6=gt(3)*(a6.^3).*R6.*(V6-Eca(3)); %misspelled in So paper
-    Ica6=gca(3)*(s6.^2).*(V6-Eca(3)); 
-    Iahp6=gahp(3)*(V6-Ek(3)).*(CA6./(CA6+k1(3))); %as Ek is the same with Eahp
-    %Isnsnr=gsynsnr*(V6-Esynsnr).*S9; %first-order kinetics 1sn to 1snr
-    Isnsnr=0.5*(gsynsnr*(V6-Esynsnr).*(S2+S21));
+    Isnsnr=gsngi.*(V6-Esynsnr).*(S2c+S21c); 
     %str-snr synapse
-    Istrsnr=gsynstr(4)*(V6-Esynstr(6)).*S13; %1str to 1ge
-    %Iappsnr=3;
-    Iappsnr=0;
+    %Istrsnr=gsynstr(4)*(V6-Esynstr(6)).*S13; %1str to 1ge
     
     %Striatum D2 cell currents
     Ina7=gna(5)*(m7.^3).*h7.*(V7-Ena(5));
     Ik7=gk(5)*(n7.^4).*(V7-Ek(5));
     Il7=gl(4)*(V7-El(4));
-    Im7=(2.6-2.5*pd)*gm*p7.*(V7-Em); %optimized
-    %Im7=(2.6-bopt*pd)*gm*p7.*(V7-Em);
+    %Im7=(2.6-1.1*pd)*gm*p7.*(V7-Em);
+    %Im7=(2.6-1.1*pd)*gm*p7.*(V7-Em); smh
+    %Im7=(2.6-copt*pd)*gm*p7.*(V7-Em);
+    Im7=(2.6-0.1*pd)*gm*p7.*(V7-Em);
     Igaba7=(ggaba/4)*(V7-Esynstr(1)).*(S11cr+S12cr+S13cr+S14cr); %maybe change to 3.5 for direct and indirect %recieves input from 40% remaining
-    Icorstr=(9*gcorstr-0.37*pd)*(V7-Esynstr(2)).*Sc(:,i-1); %optimized
-    %Icorstr=(9*gcorstr-copt*pd)*(V7-Esynstr(2)).*Sc(:,i-1); 
-    %Icorstr=(dopt*gcorstr-0.132*pd)*(V7-Esynstr(2)).*Sc(:,i-1); 
+    %Icorstr= (gcorstr-0.044*pd)*(V7-Esynstr(2)).*Sc(:,i);
+    %Icorstr=(5*gcorstr-0.044*pd)*(V7-Esynstr(2)).*Sc(:,i); smh
+    %Icorstr=(aopt*gcorstr-bopt*pd)*(V7-Esynstr(2)).*Sc(:,i);
+    Icorstr=(4.75*gcorstr-0.154*pd)*(V7-Esynstr(2)).*Sc(:,i);
     %ge-str synapse
-    Igestr=gsynstr(2)*(V7-Esynstr(4)).*S11; %1ge to 1str
-    %Iappstr=copt; 
-    Iappstr=5; %optimized
+    Igestr=gstrgpe*(V7-Esynstr(3)).*(S3d);
+    Iappstr=0; 
     
     %Differential Equations for cells using forward Euler method
     %thalamic
-    vth(:,i)= V1+dt*(1/Cm*(-Il1-Ik1-Ina1-It1-Igith+Istim(i)));
+    vth(:,i+1)= V1+dt*(1/Cm*(-Il1-Ik1-Ina1-It1-Igith+Istim(i+1)));
     H1=H1+dt*((h1-H1)./th1);
     R1=R1+dt*((r1-R1)./tr1);
-    Sc(:,i)=Sc(:,i-1)+dt*(-Bcort.*Sc(:,i-1));
+    Sc(:,i+1)=Sc(:,i)+dt*(-Bcort.*Sc(:,i));
     
-    %STN
-    vsn(:,i)=V2+dt*(1/Cm*(-Il2-Ik2-Ina2-It2-Ica2-Iahp2-Igesn+Iappstn+Idbs(i)-Ippnsn)); %currently STN-DBS
-    N2=N2+dt*(0.75*(n2-N2)./tn2); 
-    H2=H2+dt*(0.75*(h2-H2)./th2);
-    R2=R2+dt*(0.2*(r2-R2)./tr2);
-    CA2=CA2+dt*(3.75*10^-5*(-Ica2-It2-kca(2)*CA2));
-    C2=C2+dt*(0.08*(c2-C2)./tc2); 
-    %for second order second-order alpha-synapse
-    a=find(vsn(:,i-1)<-10 & vsn(:,i)>-10);
-    u=zeros(n,1); u(a)=gpeak/(tau*exp(-1))/dt; 
-    S2=S2+dt*Z2; 
-    zdot=u-2/tau*Z2-1/(tau^2)*S2;
-    Z2=Z2+dt*zdot;
-    %for stn-ppn synapse
-    S5=S5+dt*(A(2)*(1-S5).*Hinf(V2-the(2))-B(2)*S5);    
-    %for stn-snr synapse
-    S9=S9+dt*(A(2)*(1-S9).*Hinf(V2-the(2))-B(2)*S9);
+    %STN 
+    vsn(:,i+1) = V2 + (dt/Cm)*(((Elsn-V2)/Rm) + Ie -Icorsnampa-Icorsnnmda-Igesn);%+Idbs(i)-Ippnsn); %currently STN-DBS
     
+    if vsn(:,i+1)>= Vth
+        vsn(:,i)=40;
+        vsn(:,i+1)=Vreset;
+    end 
+    
+    
+    %Calculate synapses
+    for j=1:n
+        if (vsn(j,i+1)<-10 && vsn(j,i)>-10) % check for input spike
+             t_list_stn(j).times = [t_list_stn(j).times; 1];
+        end   
+        
+       %Calculate synaptic current due to current and past input spikes
+       S2a(j) = sum(syn_func_stn_gpea(t_list_stn(j).times));
+       S2an(j) = sum(syn_func_stn_gpen(t_list_stn(j).times));
+       S2b(j) = sum(syn_func_stn_gpi(t_list_stn(j).times));
+       S2c(j) = sum(syn_func_stn_gpi(t_list_stn(j).times));
+
+       %Update spike times
+       if t_list_stn(j).times
+         t_list_stn(j).times = t_list_stn(j).times + 1;
+         if (t_list_stn(j).times(1) == t_a/dt)  % Reached max duration of syn conductance
+           t_list_stn(j).times = t_list_stn(j).times((2:max(size(t_list_stn(j).times))));
+         end
+       end
+     end
+
     %GPe
-    vge(:,i)=V3+dt*(1/Cm*(-Il3-Ik3-Ina3-It3-Ica3-Iahp3-Isnge-Igege+Iappgpe-Istrge));
+%     vge(:,i+1) = V3 + (dt/Cm)*(((Elsne-V3)/Rm) + Iege-Isnge-Igege-Isngenmda-Istrge);
+%     
+%     if vge(:,i+1)>= Vth
+%         V3=40;
+%         vge(:,i+1)=Vresete;
+%     end 
+%     vge(:,i)=V3;
+    
+    vge(:,i+1)=V3+dt*(1/Cm*(-Il3-Ik3-Ina3-It3-Ica3-Iahp3-Isnge-Isngenmda-Igege+Iege-Istrge));
+    
     N3=N3+dt*(0.1*(n3-N3)./tn3); %misspelled in So paper
     H3=H3+dt*(0.05*(h3-H3)./th3); %misspelled in So paper
     R3=R3+dt*(1*(r3-R3)./tr3); %misspelled in So paper
     CA3=CA3+dt*(1*10^-4*(-Ica3-It3-kca(3)*CA3));
-    S3=S3+dt*(A(3)*(1-S3).*Hinf(V3-the(3))-B(3)*S3);
-    %ge-str synapse
-    S11=S11+dt*(A(3)*(1-S11).*Hinf(V3-the(3))-B(3)*S11); 
+    
+    %Calculate synapses
+    for j=1:n
+        if (vge(j,i)<-10 && vge(j,i+1)>-10) % check for input spike
+             t_list_gpe(j).times = [t_list_gpe(j).times; 1];
+        end  
+        
+       %Calculate synaptic current due to current and past input spikes
+       S3a(j) = sum(syn_func_gpe_stn(t_list_gpe(j).times));
+       S3b(j) = sum(syn_func_gpe_gpi(t_list_gpe(j).times));
+       S3c(j) = sum(syn_func_gpe_gpe(t_list_gpe(j).times));
+       S3d(j) = sum(syn_func_str_gpe(t_list_gpe(j).times));
+   
+       %Update spike times
+       if t_list_gpe(j).times
+         t_list_gpe(j).times = t_list_gpe(j).times + 1;
+         if (t_list_gpe(j).times(1) == t_a/dt)  % Reached max duration of syn conductance
+           t_list_gpe(j).times = t_list_gpe(j).times((2:max(size(t_list_gpe(j).times))));
+         end
+       end
+    end
     
     %GPi
-    vgi(:,i)=V4+dt*(1/Cm*(-Il4-Ik4-Ina4-It4-Ica4-Iahp4+Iappgpi-Isngi-Igegi-Ippngi-Istrgi));
+%     vgi(:,i+1) = V4 + (dt/Cm)*(((Elsne-V4)/Rm) + Iegi-Isngi-Igegi-Istrgi);%-Ippngi;
+%     
+%     if vgi(:,i+1)>= Vth
+%         V4=40;
+%         vgi(:,i+1)=Vreset;
+%     end 
+%     vgi(:,i)=V4;
+    
+    vgi(:,i+1)=V4+dt*(1/Cm*(-Il4-Ik4-Ina4-It4-Ica4-Iahp4+Iegi-Isngi-Igegi-Istrgi));%-Ippngi
+    
     N4=N4+dt*(0.1*(n4-N4)./tn4); %misspelled in So paper
     H4=H4+dt*(0.05*(h4-H4)./th4); %misspelled in So paper
     R4=R4+dt*(1*(r4-R4)./tr4); %misspelled in So paper
     CA4=CA4+dt*(1*10^-4*(-Ica4-It4-kca(3)*CA4));
-    %for second order second-order alpha-synapse
-    a=find(vgi(:,i-1)<-10 & vgi(:,i)>-10);
-    u=zeros(n,1); u(a)=gpeak1/(tau*exp(-1))/dt; 
-    S4=S4+dt*Z4; 
-    zdot=u-2/tau*Z4-1/(tau^2)*S4;
-    Z4=Z4+dt*zdot;  
-    %for gpi-ppn synapse
-    S6=S6+dt*(A(4)*(1-S6).*Hinf(V4-the(4))-B(4)*S6);
+    
+    %Calculate synapses
+    for j=1:n
+        if (vgi(j,i)<-10 && vgi(j,i+1)>-10) % check for input spike
+             t_list_gpi(j).times = [t_list_gpi(j).times; 1];
+        end
+        
+        % Calculate synaptic current due to current and past input spikes
+        S4(j) = sum(syn_func_gpi_th(t_list_gpi(j).times));
+
+
+       % Update spike times
+       if t_list_gpi(j).times
+         t_list_gpi(j).times = t_list_gpi(j).times + 1;
+         if (t_list_gpi(j).times(1) == t_a/dt)  % Reached max duration of syn conductance
+           t_list_gpi(j).times = t_list_gpi(j).times((2:max(size(t_list_gpi(j).times))));
+         end
+       end
+    end
     
     %PPN
-    vppn(:,i)=V5+dt*(1/Cm*(-Inal5-Ikl5-Ina5-Ik5-It5-Ihyp5-Inap5+Iappppn-Icort-Isnppn-Igippn-Isnrppn));
+    vppn(:,i+1)=V5+dt*(1/Cm*(-Inal5-Ikl5-Ina5-Ik5-It5-Ihyp5-Inap5+Iappppn-Icort));%-Isnppn-Igippn-Isnrppn
+    
     H5=H5+dt*((h5-H5)./th5);
     M5=M5+dt*((m5-M5)./tm5);
     Mk5=Mk5+dt*((mk5-Mk5)./tmk5);
@@ -346,27 +548,44 @@ for i=2:length(t)
     
     %SNr
     %vsnr(:,i)=V6+dt*(1/Cm*(-Il6-Ik6-Ina6-It6-Ica6-Iahp6-Isnsnr-Istrsnr+Idbs(i)+Iappsnr)); 
-    vsnr(:,i)=V6+dt*(1/Cm*(-Il6-Ik6-Ina6-It6-Ica6-Iahp6-Isnsnr-Istrsnr+Iappsnr)); 
-    N6=N6+dt*(0.1*(n6-N6)./tn6); %misspelled in So paper
-    H6=H6+dt*(0.05*(h6-H6)./th6); %misspelled in So paper
-    R6=R6+dt*(1*(r6-R6)./tr6); %misspelled in So paper
-    CA6=CA6+dt*(1*10^-4*(-Ica6-It6-kca(3)*CA6));
-    S14=S14+dt*(A(6)*(1-S14).*Hinf(V6-the(6))-B(6)*S14); %snr-ppn synapse
+    vsnr(:,i+1)=V6 + (dt/Cm)*(((Elsn-V6)/Rm) + Iesnr);%-Isnsnr-Istrsnr
+    
+    if vsnr(:,i+1)>= Vth
+        V6=40;
+        vsnr(:,i+1)=Vreset;
+    end 
+    vsnr(:,i)=V6;
+     
+    %S14=S14+dt*(A(6)*(1-S14).*Hinf(V6-the(6))-B(6)*S14); %snr-ppn synapse
+
     
     %Striatum D2
-    vstr(:,i)=V7+(dt/Cm)*(-Ina7-Ik7-Il7-Im7-Igaba7-Icorstr+Iappstr-Igestr);
+    vstr(:,i+1)=V7+(dt/Cm)*(-Ina7-Ik7-Il7-Im7-Igaba7-Icorstr+Iappstr-Igestr);
+    
     m7=m7+dt*(str_alpham(V7).*(1-m7)-str_betam(V7).*m7);
     h7=h7+dt*(str_alphah(V7).*(1-h7)-str_betah(V7).*h7);
     n7=n7+dt*(str_alphan(V7).*(1-n7)-str_betan(V7).*n7);
     p7=p7+dt*(str_alphap(V7).*(1-p7)-str_betap(V7).*p7);
     S1c=S1c+dt*((str_Ggaba(V7).*(1-S1c))-(S1c/tau_i));
-    %for str-gpe synapse
-    S10=S10+dt*(A(7)*(1-S10).*Hinf(V7-the(7))-B(7)*S10); 
-    %for str-gpi synapse
-    S12=S12+dt*(A(7)*(1-S12).*Hinf(V7-the(7))-B(7)*S12); 
-    %for str-snr synapse
-    S13=S13+dt*(A(7)*(1-S13).*Hinf(V7-the(7))-B(7)*S13); 
+    
+    for j=1:n
+        if (vstr(j,i)<-10 && vstr(j,i+1)>-10) % check for input spike
+             t_list_str_indr(j).times = [t_list_str_indr(j).times; 1];
+        end  
+        
+       % Calculate synaptic current due to current and past input spikes
+       S5(j) = sum(syn_func_str_gpe(t_list_str_indr(j).times));
+       S9(j) = sum(syn_func_str_gpi(t_list_str_indr(j).times));
 
+       % Update spike times
+       if t_list_str_indr(j).times
+         t_list_str_indr(j).times = t_list_str_indr(j).times + 1;
+         if (t_list_str_indr(j).times(1) == t_a/dt)  % Reached max duration of syn conductance
+            t_list_str_indr(j).times = t_list_str_indr(j).times((2:max(size(t_list_str_indr(j).times))));
+         end
+       end
+    end
+    
 end
 
 %calculate freqeuncy for plotting
@@ -384,7 +603,7 @@ GN=calculateEI(t,vth,timespike,tmax); %for thalamus
 
 titleval=GN; %variable for plotting title
 
-%%Plots membrane potential for one cell in each nucleus
+%Plots membrane potential for one cell in each nucleus
 plotpotentials; 
 
 return
