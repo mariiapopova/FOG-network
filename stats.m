@@ -212,5 +212,9 @@ hold off
 title('Error Index')
 
 suptitle(['Firing rates and EI in FOG network']);
-disp(d_m);
-disp(d_s);
+disp(ppn_h_s);
+disp(ppn_p_s);
+disp(ppn_d_s);
+disp(ppn_h_m);
+disp(ppn_p_m);
+disp(ppn_d_m);
